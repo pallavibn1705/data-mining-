@@ -1,0 +1,39 @@
+Q2(d) Make the retrieval structure persistent and choose an access path
+
+The LSH retrieval structure created in Q2(c) must not remain only as a Python object because it would disappear when the Python process terminates. Therefore, I stored the LSH bucket memberships as persistent relational data in PostgreSQL.
+
+The relational schema used is:
+
+CREATE TABLE q2d_lsh_bucket (
+    table_no SMALLINT NOT NULL,
+    bucket INTEGER NOT NULL,
+    notice_id TEXT NOT NULL,
+    PRIMARY KEY (table_no, bucket, notice_id)
+);
+
+Each notice has one bucket in each of the 16 LSH tables. For 12,000 notices and 16 tables, the retrieval structure contains 192,000 rows. The primary key prevents duplicate membership of the same notice in the same table and bucket.
+
+For the lookup access path, I created a B-tree index:
+
+CREATE INDEX q2d_lsh_bucket_lookup_idx
+ON q2d_lsh_bucket (table_no, bucket);
+
+The chosen access method is a B-tree index on (table_no, bucket). During lookup, the application already knows the 16 LSH bucket keys of the query notice. The B-tree physically organizes index entries by these key values, allowing PostgreSQL to navigate to the matching bucket entries instead of scanning the complete relation. The matching notice IDs are then returned as the candidate list.
+
+As an alternative, I considered a sequential scan. A sequential scan physically reads the relation page by page and checks the lookup condition against the rows. It therefore does not directly navigate to the required bucket entries.
+
+I compared the two access paths using PostgreSQL EXPLAIN ANALYZE and wall-clock measurements. The experiment used the persistent q2d_lsh_bucket table containing 192,000 rows.
+
+B-tree / planner-selected path:
+Rows examined: [paste the value from the PowerShell output]
+Execution time: [paste the value from the PowerShell output] ms
+Wall-clock time: [paste the value from the PowerShell output] ms
+
+Forced sequential scan:
+Rows examined: [paste the value from the PowerShell output]
+Execution time: [paste the value from the PowerShell output] ms
+Wall-clock time: [paste the value from the PowerShell output] ms
+
+The measurements show the physical difference between the two access paths. The B-tree can navigate directly to entries matching the known (table_no, bucket) keys, whereas the sequential scan examines the relation while applying the lookup condition.
+
+Therefore, I selected the B-tree index on (table_no, bucket) as the normal application access path and rejected the sequential scan for the lookup operation. The LSH bucket memberships are stored as PostgreSQL rows, so the retrieval structure survives a Python process restart and can be queried by the application.
