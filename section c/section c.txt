@@ -1,0 +1,20 @@
+Q2(c) Make retrieval sublinear and price the risk
+
+I used Locality-Sensitive Hashing (LSH) with random hyperplanes for cosine similarity. The 30,000-dimensional TF-IDF vectors are converted into 8-bit hash signatures, and multiple hash tables are used. A pair becomes a candidate if the two notices fall into the same bucket in at least one table.
+
+The trade-off was measured by changing the number of LSH tables:
+
+LSH tables	Candidate pairs	Candidate fraction	Same-pair recall
+2	2,817,698	3.91%	55.56%
+4	5,459,870	7.58%	73.12%
+8	9,551,818	13.27%	89.25%
+16	18,935,459	26.30%	98.21%
+32	33,046,806	45.90%	99.64%
+
+The survival probability increases strongly with true similarity. For example, the survival probability was about 97.7% for pairs with similarity 0.7–0.8, 97.4% for 0.8–0.9, and 100% for 0.9–1.0.
+
+I chose 16 LSH tables with 8 bits per table as the operating point. It retrieves 98.21% of the labelled same pairs while producing 18,935,459 candidate pairs instead of comparing all 71,994,000 possible pairs.
+
+For the business risk, I explicitly assumed a false-merge cost : missed-duplicate cost of 10 : 1. Therefore, the candidate stage is biased toward high recall: missing a genuine duplicate is treated as substantially more costly than generating additional candidate comparisons. The final similarity/merge decision can subsequently use a stricter threshold to control false merges.
+
+The resulting survival curve was plotted against true cosine similarity, with the 16-table operating point selected.

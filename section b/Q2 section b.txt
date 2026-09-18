@@ -1,0 +1,63 @@
+QUESTION 2(b) — Trade Exactness for Space
+
+Objective:
+The exact TF-IDF representation is reduced to a fixed-size
+representation so that similarity can be estimated using less
+space while keeping the error within an application-defined limit.
+
+Accuracy requirement:
+The application requires the estimated cosine similarity to have
+an absolute error of no more than ±0.15 on the labelled validation
+pairs.
+
+Size selection:
+There are 12,000 notices. Using the Johnson-Lindenstrauss
+dimensionality argument for 12,000 points with a 5% failure
+probability gives a dimension of approximately 4,600 for the
+required distortion level. I therefore selected 8,192 dimensions,
+the next convenient power-of-two size above this requirement,
+to provide additional margin rather than choosing an arbitrary
+round number.
+
+Implementation:
+The exact word-level TF-IDF representation used in Q2(a) has
+30,000 dimensions. A Sparse Random Projection was used to reduce
+this to exactly 8,192 dimensions.
+
+Measured results on all 900 labelled pairs:
+
+Exact TF-IDF dimensions: 30,000
+Reduced dimensions: 8,192
+
+Mean absolute error: 0.007677
+Median absolute error: 0.005372
+95th percentile error: 0.022514
+Maximum absolute error: 0.042866
+
+Pairs within ±0.15 error: 100.0%
+
+Error by label:
+
+Different:
+Mean = 0.009695
+Median = 0.008051
+Maximum = 0.042866
+
+Same:
+Mean = 0.003186
+Median = 0.001695
+Maximum = 0.028821
+
+Largest observed error:
+N005497 and N008336
+Label = different
+Exact similarity = 0.342894
+Approximate similarity = 0.385760
+Absolute error = 0.042866
+
+Conclusion:
+The 8,192-dimensional reduced representation met the required
+±0.15 accuracy target on 100% of the 900 manually labelled pairs.
+The maximum observed error was only 0.042866, substantially below
+the permitted error. Therefore the measured behaviour was better
+than the accuracy requirement predicted.
