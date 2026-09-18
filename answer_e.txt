@@ -1,0 +1,45 @@
+TASK (e) — Query Across the Two Systems
+
+Objective: Query sales data stored in the MinIO object store together
+with store and product information stored in PostgreSQL, without first
+copying either side into the other.
+
+Architecture: - MinIO stores the partitioned sales CSV files. -
+PostgreSQL stores the stores and products master tables. - DuckDB acts
+as the analytical query engine and accesses both systems.
+
+Cross-system query: The following single DuckDB query reads sales
+directly from MinIO and joins them with PostgreSQL tables:
+
+SELECT st.store_id, st.store_name, p.product_code, COUNT() AS
+sales_lines, ROUND(SUM(s.qty s.unit_price), 2) AS revenue FROM
+read_csv_auto(
+’s3://sales/partitioned_sales/store=S01/month=2024-01/*.csv’ ) s JOIN
+pg.public.stores st ON st.store_id = SPLIT_PART(s.bill_no, ‘/’, 1) JOIN
+pg.public.products p ON p.product_code = s.product_code WHERE
+s.line_type = ‘SALE’ GROUP BY st.store_id, st.store_name, p.product_code
+ORDER BY revenue DESC LIMIT 10;
+
+The query successfully returned 10 rows for store S01 (Annapurna
+Jayanagar), proving that DuckDB joined data from MinIO and PostgreSQL in
+one query.
+
+Execution evidence: EXPLAIN ANALYZE showed: - READ_CSV_AUTO reading the
+MinIO S3 path. - Total Files Read: 31. - 9,260 rows read from the sales
+files. - TABLE_SCAN of the PostgreSQL stores table (12 rows). -
+TABLE_SCAN of the PostgreSQL products table (1,224 rows). - HASH_JOIN
+operators joining the sales data with stores and products. - FILTER
+applying line_type = ‘SALE’. - HASH_GROUP_BY performing COUNT and SUM
+aggregation. - TOP_N performing the final revenue ordering and LIMIT
+10. - HTTPFS statistics showed actual object-store activity: 41 GET
+requests.
+
+Therefore, the evidence from DuckDB’s actual execution plan shows that
+the sales files were accessed through MinIO/HTTPFS, PostgreSQL tables
+were scanned through the PostgreSQL connection, and the joins,
+filtering, aggregation and ordering were executed by DuckDB.
+
+Note: The demonstration query joins products using product_code only.
+For historical reporting, the production design should additionally
+match the transaction date to products.valid_from and products.valid_to,
+because product codes may be reissued.

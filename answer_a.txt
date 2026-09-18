@@ -1,0 +1,84 @@
+TASK (a) – STAND UP THE PLATFORM AND LAND THE DATA
+
+1. Platform Components
+
+Object Store:
+MinIO
+
+Relational Database:
+PostgreSQL 16
+
+Analytical Query Engine:
+DuckDB v1.5.5
+
+
+2. Data Organization
+
+The sales data is organized using store and month partitions.
+
+Partition format:
+
+store=<store_id>/month=<YYYY-MM>/
+
+Example:
+
+partitioned_sales/store=S12/month=2024-10/
+
+This contains the daily sales files for Store S12 during October 2024.
+
+
+3. Why this organization was chosen
+
+Partitioning by store and month allows a query for one store in one month
+to access only the relevant partition instead of considering sales files
+from other stores and months.
+
+This reduces the number of files and amount of data that the analytical
+query engine needs to consider.
+
+
+4. Working Query
+
+DuckDB query used:
+
+SELECT COUNT(*) AS total_rows
+FROM read_csv_auto(
+    'partitioned_sales/store=S12/month=2024-10/*.csv'
+);
+
+Result:
+
+total_rows = 9826
+
+
+5. File and Byte Comparison
+
+Complete sales folder:
+
+Files = 4457
+Bytes = 68,706,877 bytes
+Approximately = 65.55 MB
+
+
+S12 October 2024 partition:
+
+Files = 31
+Bytes = 527,831 bytes
+Approximately = 515.46 KB
+
+
+6. Comparison
+
+                    Files          Bytes
+Everything           4457           68,706,877
+S12 October            31              527,831
+
+
+7. Conclusion
+
+The store-month partitioning allows a query for S12 October 2024 to
+directly access the corresponding partition containing 31 files,
+rather than potentially considering all 4457 sales files.
+
+The original sales files were preserved and the partitioned data was
+created separately under partitioned_sales.
