@@ -1,0 +1,77 @@
+TASK (c) — Dimensional Model for Dashboard
+
+Objective:
+Design tables that allow the dashboard to slice revenue by store,
+product category, day of the week and month without repeating
+descriptive information on every sales row.
+
+Design:
+A dimensional model was created using:
+
+1. dim_store
+2. dim_category
+3. dim_product
+4. dim_date
+5. fact_sales
+
+Dimension tables:
+
+dim_store:
+Stores store_id, store_name, address_line, city, state and region.
+The store name and address are stored once instead of being repeated
+for every sales transaction.
+
+dim_category:
+Stores category_id, category_name, department and GST rate.
+
+dim_product:
+Stores product_sk, product_code, product_name, category_id, brand,
+pack size, unit of measure and product validity dates.
+
+dim_date:
+Stores the date, day of week, day name, day of month, month number,
+month name, quarter and year.
+
+Fact table:
+
+fact_sales stores:
+store_id, product_sk, category_id, sale_date, bill_no, line_no,
+quantity, unit_price, line_type and revenue.
+
+Revenue handling:
+
+SALE lines contribute positive revenue.
+RETURN lines reduce revenue.
+DISCOUNT lines reduce revenue.
+VOID lines are retained so that cancelled transactions are correctly
+accounted for.
+TAX and TENDER lines are excluded because they are not revenue.
+
+Product-code reissue:
+
+A product_code alone was not used to identify a product because retired
+product codes can be reused. Instead, the transaction date was matched
+against valid_from and valid_to to obtain the correct product_sk.
+
+Validation:
+
+Fact table rows loaded: 789,516
+Rows with product: 766,796
+Discount rows without product: 22,720
+Total revenue: 522,865,735.75
+
+The dimensional model was verified by successfully querying revenue by:
+- Store
+- Product category
+- Day of week
+- Month
+
+Indexes were created on store_id, product_sk, category_id, sale_date
+and line_type in fact_sales to support faster dashboard queries.
+
+Conclusion:
+
+The dimensional model separates descriptive attributes from transaction
+data, avoids repeating store details on millions of rows, correctly
+handles non-sale transaction types, and supports efficient dashboard
+slicing by store, category, day of week and month.

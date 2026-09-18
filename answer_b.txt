@@ -1,0 +1,31 @@
+TASK (b) — Idempotent Loading
+
+Objective:
+Make the loading step safe to run multiple times so that running it three
+times gives the same result as running it once.
+
+Deduplication key:
+(bill_no, line_no)
+
+Implementation:
+Created a DuckDB table named sales_lines with PRIMARY KEY (bill_no, line_no).
+Used INSERT OR IGNORE so duplicate sales lines from resend files are ignored.
+
+Evidence:
+
+Run 1:
+Row count: 1,120,924
+Checksum: 8ab655fab69de24932d7bd9d559ac859
+
+Run 2:
+Row count: 1,120,924
+Checksum: 8ab655fab69de24932d7bd9d559ac859
+
+Run 3:
+Row count: 1,120,924
+Checksum: 8ab655fab69de24932d7bd9d559ac859
+
+Conclusion:
+The row count and checksum are identical after all three runs.
+Therefore, the loading process is idempotent: rerunning the loader does
+not create duplicate rows or change the loaded dataset.

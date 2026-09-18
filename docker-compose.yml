@@ -1,0 +1,22 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: annapurna-postgres
+    environment:
+      POSTGRES_USER: annapurna
+      POSTGRES_PASSWORD: annapurna
+      POSTGRES_DB: annapurna
+    ports:
+      - "5432:5432"
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: annapurna-minio
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin12345
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"

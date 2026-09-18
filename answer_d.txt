@@ -1,0 +1,44 @@
+TASK (d) — Historical Price Reporting
+
+Objective:
+Ensure that reports use the product price that was applicable during
+the reporting period.
+
+Approach:
+A price-aware view named fact_sales_priced was created by joining
+fact_sales with the price_revisions table using product_sk and the
+transaction date.
+
+The matching condition is:
+
+fact_sales.product_sk = price_revisions.product_sk
+AND
+fact_sales.sale_date BETWEEN
+price_revisions.effective_from AND price_revisions.effective_to
+
+Therefore, the price revision applicable on the actual transaction
+date is selected automatically.
+
+Reporting:
+The same reporting query was executed for two different reporting
+periods by changing only the date range.
+
+March 2024:
+Lines: 64,507
+Quantity: 126,760.00
+Price-based revenue: 41,971,885.88
+
+December 2024:
+Lines: 74,511
+Quantity: 146,119.00
+Price-based revenue: 50,736,426.71
+
+The price_revisions table was also verified to contain multiple
+revisions for products, demonstrating that prices change over time.
+
+Conclusion:
+The reporting query does not use the current price. It dynamically
+selects the price revision that was effective on each transaction date.
+Therefore, the same query can be used for different reporting periods
+without changing the query logic; only the reporting-period dates are
+changed.

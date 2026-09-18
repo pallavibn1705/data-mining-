@@ -1,0 +1,106 @@
+TASK (f) — Monthly Revenue Reconciliation
+
+Objective:
+Compare the monthly revenue calculated from the sales data with
+finance_monthly.csv and identify the reason for every difference.
+
+Revenue calculation:
+Revenue includes SALE, RETURN, DISCOUNT and VOID lines.
+TAX and TENDER lines are excluded because TAX is GST and TENDER
+represents the amount paid by the customer.
+
+Monthly reconciliation:
+
+Month       Our Revenue       Finance Revenue       Difference
+2024-01     38446071.33       38446071.33           0.00
+2024-02     34887085.55       34887085.55           0.00
+2024-03     41971649.09       42457899.09          -486250.00
+2024-04     37958457.37       37958457.37           0.00
+2024-05     41764716.40       41764716.40           0.00
+2024-06     38987082.82       38987082.82           0.00
+2024-07     40295160.11       40527291.81          -232131.70
+2024-08     45252181.75       45252181.75           0.00
+2024-09     44615037.46       44615037.46           0.00
+2024-10     56359195.92       56359195.92           0.00
+2024-11     51583838.47       51583838.47           0.00
+2024-12     50745259.48       50745209.00               50.48
+
+
+Difference 1 — March 2024:
+
+Our revenue is lower than Finance by 486,250.00.
+
+Cause:
+This is a difference in revenue scope. Finance includes an
+institutional order of 486,250.00 that was invoiced outside the
+till system. Therefore, the order is not present in the sales
+folder used by the pipeline.
+
+Evidence:
+March bulk invoice = 486,250.00
+
+41,971,649.09 + 486,250.00 = 42,457,899.09
+
+Therefore the Finance figure is explained exactly.
+
+
+Difference 2 — July 2024:
+
+Our revenue is lower than Finance by 232,131.70.
+
+Cause:
+This is a source-data problem. Store S07 lost its till server
+for three days in July 2024, so the corresponding sales exports
+are missing from the source folder.
+
+Missing files:
+SALES_S07_20240709
+SALES_S07_20240710
+SALES_S07_20240711
+
+The sales data contains only 28 distinct days for S07 in July,
+while the other stores contain all 31 days.
+
+Finance has the numbers for these missing days because the store
+provided them separately.
+
+
+Difference 3 — December 2024:
+
+Our revenue is higher than Finance by 50.48.
+
+Cause:
+This is a difference in revenue calculation/rounding. Finance
+rounds each bill to the nearest rupee before calculating the
+monthly total, while the pipeline sums the transaction amounts
+with paise precision.
+
+The difference is only 50.48 and is explained by the different
+rounding method.
+
+
+October validation:
+
+October revenue matches exactly:
+
+Our revenue:     56,359,195.92
+Finance revenue: 56,359,195.92
+
+Therefore, the pipeline did not produce the approximately
+double October revenue warned about in the question.
+
+Conclusion:
+
+Only March, July and December differ from the Finance figures.
+
+March is a revenue-scope difference caused by an institutional
+order outside the till.
+
+July is a source-data problem caused by three missing S07 export
+days.
+
+December is a rounding/revenue-calculation difference.
+
+The July source-data issue should be taken back to the Finance
+team because the source folder is missing S07's three days while
+Finance has the corresponding numbers.
